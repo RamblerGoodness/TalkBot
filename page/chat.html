@@ -37,6 +37,13 @@
             <div class="time-display" id="timeDisplay">Day 1, Morning</div>
         </div>
         
+        <div class="persona-switcher" style="padding: 1rem; background: #181818; border-bottom: 1px solid #222; display: flex; align-items: center; gap: 1rem;">
+            <label for="persona-select" style="font-weight: 500; color: #4caf50;">Persona:</label>
+            <select id="persona-select" style="padding: 0.5rem; border-radius: 6px; border: 1px solid #444; background: #222; color: #fff;"></select>
+            <button id="persona-refresh" class="button" style="padding: 0.5rem 1rem;">Refresh</button>
+            <span id="persona-active-msg" style="margin-left: 1rem; color: #b0b0b0; font-size: 0.95em;"></span>
+        </div>
+
         <div class="chat-history" id="chatHistory">
             <!-- Chat messages will appear here -->
             <div class="chat-message character-message" id="introMessage">
@@ -123,6 +130,8 @@
             const messageInput = document.getElementById('messageInput');
             const chatHistory = document.getElementById('chatHistory');
             const message = messageInput.value.trim();
+            const personaSelect = document.getElementById('persona-select');
+            const selectedPersona = personaSelect ? personaSelect.value : null;
 
             if (message) {
                 // Show loading indicator
@@ -148,7 +157,10 @@
                         },
                         body: JSON.stringify({ 
                             message: message, 
-                            character: currentCharacter 
+                            character: currentCharacter,
+                            persona: selectedPersona,
+                            day: currentDay,
+                            time_of_day: currentTimeOfDay
                         })
                     });
 
@@ -161,7 +173,7 @@
                     if (response.ok) {
                         characterResponse.textContent = data.response;
                         
-                        // Update time display
+                        // Update time display from backend
                         currentDay = data.day;
                         currentTimeOfDay = data.time_of_day;
                         updateTimeDisplay();
@@ -247,6 +259,34 @@
             }
         }
 
+        // Persona switcher logic
+        async function loadPersonas() {
+            const select = document.getElementById('persona-select');
+            select.innerHTML = '';
+            try {
+                const res = await fetch('/personas');
+                const data = await res.json();
+                if (data.personas && data.personas.length > 0) {
+                    data.personas.forEach(p => {
+                        const opt = document.createElement('option');
+                        opt.value = p.name;
+                        opt.textContent = `${p.name} (${p.description})`;
+                        select.appendChild(opt);
+                    });
+                } else {
+                    const opt = document.createElement('option');
+                    opt.value = '';
+                    opt.textContent = 'No personas available';
+                    select.appendChild(opt);
+                }
+            } catch (e) {
+                select.innerHTML = '<option value="">Error loading personas</option>';
+            }
+        }
+
+        // Track current persona
+        let currentPersona = null;
+
         // Event listeners
         document.addEventListener('DOMContentLoaded', () => {
             // Load character information
@@ -265,6 +305,14 @@
             document.getElementById('nextDayButton').addEventListener('click', () => changeTime('next_day'));
             document.getElementById('prevTimeButton').addEventListener('click', () => changeTime('prev_time'));
             document.getElementById('nextTimeButton').addEventListener('click', () => changeTime('next_time'));
+
+            // Load personas and set up persona switcher
+            loadPersonas();
+            document.getElementById('persona-refresh').onclick = loadPersonas;
+            document.getElementById('persona-select').onchange = function() {
+                currentPersona = this.value;
+                document.getElementById('persona-active-msg').textContent = currentPersona ? `Active: ${currentPersona}` : '';
+            };
         });
     </script>
 </body>

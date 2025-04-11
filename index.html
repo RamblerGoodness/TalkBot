@@ -33,6 +33,25 @@
     </div>
     
     <div class="container">
+        <div class="persona-section" style="margin-bottom: 2rem;">
+            <h2>Create a Persona</h2>
+            <form id="persona-form" style="display: flex; gap: 1rem; justify-content: center; align-items: flex-end; flex-wrap: wrap;">
+                <div>
+                    <label for="persona-name">Name:</label><br>
+                    <input type="text" id="persona-name" required style="padding: 0.5rem; border-radius: 5px; border: 1px solid #444;">
+                </div>
+                <div>
+                    <label for="persona-desc">Description:</label><br>
+                    <input type="text" id="persona-desc" required style="padding: 0.5rem; border-radius: 5px; border: 1px solid #444; width: 300px;">
+                </div>
+                <button type="submit" class="button">Create Persona</button>
+            </form>
+            <div id="persona-message" style="margin-top: 1rem; color: #4caf50;"></div>
+        </div>
+        <div class="persona-list-section" style="margin-bottom: 2rem;">
+            <h2>Saved Personas</h2>
+            <ul id="persona-list" style="list-style: none; padding: 0; max-width: 600px; margin: 0 auto;"></ul>
+        </div>
         <div class="character-section">
             <h2>Choose Your Character</h2>
             <p class="section-description">Select a character below to begin your conversation</p>

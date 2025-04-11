@@ -72,4 +72,95 @@ document.addEventListener("DOMContentLoaded", () => {
             console.error('Error fetching characters:', error);
             characterList.innerHTML = '<li class="error">Failed to load characters. Please make sure the server is running.</li>';
         });
+
+    // Persona creation logic
+    const personaForm = document.getElementById("persona-form");
+    if (personaForm) {
+        personaForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const name = document.getElementById("persona-name").value.trim();
+            const desc = document.getElementById("persona-desc").value.trim();
+            const msgDiv = document.getElementById("persona-message");
+            msgDiv.textContent = "";
+            if (!name || !desc) {
+                msgDiv.textContent = "Please enter both a name and description.";
+                return;
+            }
+            try {
+                const response = await fetch("/persona", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name, description: desc })
+                });
+                if (response.ok) {
+                    msgDiv.textContent = `Persona '${name}' created!`;
+                    personaForm.reset();
+                } else {
+                    const data = await response.json();
+                    msgDiv.textContent = data.error || "Failed to create persona.";
+                }
+            } catch (err) {
+                msgDiv.textContent = "Error connecting to server.";
+            }
+        });
+    }
+
+    // Persona list logic
+    async function loadPersonaList() {
+        const list = document.getElementById("persona-list");
+        list.innerHTML = '';
+        try {
+            const res = await fetch('/personas');
+            const data = await res.json();
+            if (data.personas && data.personas.length > 0) {
+                data.personas.forEach(p => {
+                    const li = document.createElement('li');
+                    li.style.display = 'flex';
+                    li.style.alignItems = 'center';
+                    li.style.justifyContent = 'space-between';
+                    li.style.padding = '0.5rem 0';
+                    li.innerHTML = `
+                        <span><strong>${p.name}</strong>: <span class="desc">${p.description}</span></span>
+                        <span>
+                            <button class="button persona-edit" data-name="${p.name}">Edit</button>
+                            <button class="button persona-delete" data-name="${p.name}" style="background:#e53935; margin-left:0.5rem;">Delete</button>
+                        </span>
+                    `;
+                    list.appendChild(li);
+                });
+            } else {
+                list.innerHTML = '<li style="color:#b0b0b0;">No personas saved.</li>';
+            }
+        } catch (e) {
+            list.innerHTML = '<li style="color:#e53935;">Error loading personas.</li>';
+        }
+    }
+
+    loadPersonaList();
+
+    // Persona edit/delete handlers
+    document.getElementById("persona-list").onclick = async function(e) {
+        if (e.target.classList.contains("persona-delete")) {
+            const name = e.target.getAttribute("data-name");
+            if (confirm(`Delete persona '${name}'?`)) {
+                await fetch(`/persona/${encodeURIComponent(name)}`, { method: 'DELETE' });
+                loadPersonaList();
+                loadPersonas && loadPersonas(); // refresh chat persona dropdown if present
+            }
+        } else if (e.target.classList.contains("persona-edit")) {
+            const name = e.target.getAttribute("data-name");
+            const descSpan = e.target.closest('li').querySelector('.desc');
+            const currentDesc = descSpan.textContent;
+            const newDesc = prompt(`Edit description for '${name}':`, currentDesc);
+            if (newDesc !== null && newDesc.trim() !== "") {
+                await fetch(`/persona/${encodeURIComponent(name)}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ description: newDesc.trim() })
+                });
+                loadPersonaList();
+                loadPersonas && loadPersonas();
+            }
+        }
+    };
 });

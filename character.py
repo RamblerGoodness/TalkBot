@@ -3,6 +3,7 @@ import json
 import os
 import ollama
 import chromadb
+from memory import ShortTermMemory, LongTermMemory
 
 
 class Character:
@@ -14,16 +15,13 @@ class Character:
         self.background = background
         # Fix path with forward slashes instead of backslashes for web compatibility
         self.profile = f"page/image/{profile}.png"
-        self.shortTermMemory = []
+        self.short_term_memory = ShortTermMemory()
+        self.long_term_memory = LongTermMemory(db_path=f"{db_name}_chroma")
         self.model = "dolphin3"
         self.current_day = 1
         self.time_of_day = "morning"
         self.user_name = user_name
         self.user_persona = user_persona
-
-        # Initialize ChromaDB client and collection with updated configuration
-        self.chroma_client = chromadb.PersistentClient(path=f"{db_name}_chroma")
-        self.memory_collection = self.chroma_client.get_or_create_collection(name="memories")
 
     def set_time(self, day, time_of_day):
         if time_of_day not in self.VALID_TIMES:
@@ -40,20 +38,13 @@ class Character:
             self.current_day += 1
 
     def remember_message(self, message, time_since_last):
-        self.shortTermMemory.append({
-            "message": message,
-            "time_delta": time_since_last,
-            "day": self.current_day,
-            "time_of_day": self.time_of_day
-        })
-        if len(self.shortTermMemory) > 20:
-            self.shortTermMemory.pop(0)
+        self.short_term_memory.add(message, time_since_last, self.current_day, self.time_of_day)
 
     def summarize_and_store_memory(self):
-        if not self.shortTermMemory:
+        if not self.short_term_memory.entries:
             return
 
-        messages = [item["message"] for item in self.shortTermMemory]
+        messages = [item["message"] for item in self.short_term_memory.entries]
         context = [{"role": "system", "content": "Summarize the following conversation into a long-term memory."}] + messages
 
         # Add token limit to Ollama call (max 150 tokens for summaries)
@@ -69,26 +60,25 @@ class Character:
 
         if summary:
             memory_id = f"day_{self.current_day}_time_{self.time_of_day}"
-            self.memory_collection.add(
-                ids=[memory_id],
-                metadatas=[{"day": self.current_day, "time_of_day": self.time_of_day}],
-                documents=[summary]
-            )
-            self.shortTermMemory.clear()
+            self.long_term_memory.add(memory_id, summary, self.current_day, self.time_of_day)
+            self.short_term_memory.clear()
 
     def query_long_term_memory(self, prompt):
-        results = self.memory_collection.query(
-            query_texts=[prompt],
-            n_results=2
-        )
-        return results.get("documents", [])
+        return self.long_term_memory.query(prompt)
 
     def build_context(self, prompt):
         system_prompt = {
             "role": "system",
-            "content": f"{self.name}: {self.background}\nUser ({self.user_name}): {self.user_persona}"
+            "content": (
+                f"You are {self.name}, an AI character in a roleplay system. "
+                f"Stay in character as {self.name} at all times. "
+                f"Your background: {self.background} "
+                f"Respond in {self.name}'s style and voice. "
+                f"The user is {self.user_name}: {self.user_persona}. "
+                f"Do not break character or refer to yourself as an AI."
+            )
         }
-        short_mem = [item["message"] for item in self.shortTermMemory[-8:]]
+        short_mem = self.short_term_memory.get_recent()
         long_mem = self.query_long_term_memory(prompt)
         long_mem_messages = [{"role": "system", "content": mem} for mem in long_mem]
         context = [system_prompt] + long_mem_messages + short_mem + [
@@ -122,7 +112,7 @@ class Character:
             "intro": self.intro,
             "background": self.background,
             "profile": self.profile,
-            "shortTermMemory": self.shortTermMemory,
+            "shortTermMemory": self.short_term_memory.entries,
             "current_day": self.current_day,
             "time_of_day": self.time_of_day
         }

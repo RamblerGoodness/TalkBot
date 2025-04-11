@@ -1,20 +1,85 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About RolePlay.AI</title>
+    <title>About - RolePlay.AI</title>
     <link rel="stylesheet" href="../style/home.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
 <body>
-    <div class="container">
-        <h1>About RolePlay.AI</h1>
-        <p>RolePlay.AI is an interactive platform where you can chat with AI-powered characters. Each character has a unique backstory and personality, making every interaction engaging and fun.</p>
-        <p>Explore the world of RolePlay.AI and create your own adventures!</p>
-        <a href="../index.html" style="color: #007bff;">Back to Home</a>
+    <header>
+        <div class="header-container">
+            <h1>RolePlay<span class="highlight">.AI</span></h1>
+            <nav>
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="about.html" class="active">About</a></li>
+                    <li><a href="https://github.com/RamblerGoodness/TalkBot" target="_blank">Github</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    
+    <div class="about-container">
+        <h1>About RolePlay<span class="highlight">.AI</span></h1>
+        <p>RolePlay.AI is a platform that lets you interact with AI-powered characters that have unique personalities, memories, and backgrounds.</p>
+        
+        <div class="about-section">
+            <h2>How It Works</h2>
+            <p>Our characters use the latest AI technology to simulate realistic conversations. Each character has:</p>
+            <ul>
+                <li>A distinct personality and background story</li>
+                <li>Both short-term and long-term memory of your interactions</li>
+                <li>Context awareness and the ability to track time progression</li>
+                <li>Dynamic responses based on your relationship development</li>
+            </ul>
+            <p>When you chat with a character, they remember past conversations and gradually build a relationship with you. The time also advances with each message, influencing how characters respond based on the time of day.</p>
+        </div>
+        
+        <div class="about-section">
+            <h2>Features</h2>
+            <ul>
+                <li><strong>Long-term Memory:</strong> Characters remember your past conversations and refer back to them in future interactions.</li>
+                <li><strong>Dynamic Time System:</strong> Time progresses with each conversation, affecting character behavior and responses.</li>
+                <li><strong>Natural Conversations:</strong> Advanced AI models provide engaging and contextually relevant responses.</li>
+                <li><strong>Character Database:</strong> Choose from a variety of characters with unique personalities and backgrounds.</li>
+                <li><strong>Time Controls:</strong> Manually progress time to see how characters behave at different times of day.</li>
+            </ul>
+        </div>
+        
+        <div class="about-section">
+            <h2>Technology</h2>
+            <p>RolePlay.AI is built using cutting-edge technology:</p>
+            <ul>
+                <li><strong>Backend:</strong> Python with Flask for the API server</li>
+                <li><strong>AI Models:</strong> Ollama for generating natural and contextual responses</li>
+                <li><strong>Memory Storage:</strong> ChromaDB for efficient semantic memory retrieval</li>
+                <li><strong>Frontend:</strong> Modern HTML5, CSS3, and JavaScript for a responsive user interface</li>
+            </ul>
+            <p>Our system uses vector embeddings to store and retrieve memories, allowing characters to have meaningful recall of past interactions in a way that feels natural and human-like.</p>
+        </div>
+        
+        <div class="about-section">
+            <h2>Future Plans</h2>
+            <p>We're constantly working to improve RolePlay.AI. Some features we're planning include:</p>
+            <ul>
+                <li>More diverse character personalities and backstories</li>
+                <li>Enhanced memory systems with emotional weighting</li>
+                <li>Character relationship development tracking</li>
+                <li>Voice interaction capabilities</li>
+                <li>Customizable character creation</li>
+            </ul>
+        </div>
     </div>
+    
+    <footer>
+        <div class="footer-container">
+            <p>&copy; 2025 RolePlay.AI - AI Character Interactions</p>
+        </div>
+    </footer>
 </body>
-
 </html>

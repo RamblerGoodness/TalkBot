@@ -4,96 +4,268 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RolePlay AI Chat</title>
-    <link rel="stylesheet" href="style\home.css">
+    <title>Chat - RolePlay.AI</title>
+    <link rel="stylesheet" href="../style/home.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
 <body>
-    <div class="container">
-        <div class="character">
-            <img id="characterImage" src="placeholder.jpg" alt="Character">
-            <h2 id="characterName">Character Name</h2>
+    <header>
+        <div class="header-container">
+            <h1>RolePlay<span class="highlight">.AI</span></h1>
+            <nav>
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="about.html">About</a></li>
+                    <li><a href="https://github.com/RamblerGoodness/TalkBot" target="_blank">Github</a></li>
+                </ul>
+            </nav>
         </div>
+    </header>
+
+    <div class="chat-container">
+        <div class="chat-header">
+            <button class="back-button" onclick="window.location.href='../index.html'">
+                ← Back to characters
+            </button>
+            <div class="character-info">
+                <img id="characterImage" src="image/lyra.png" alt="Character">
+                <h2 id="characterName">Loading character...</h2>
+            </div>
+            <div class="time-display" id="timeDisplay">Day 1, Morning</div>
+        </div>
+        
         <div class="chat-history" id="chatHistory">
             <!-- Chat messages will appear here -->
+            <div class="chat-message character-message" id="introMessage">
+                Loading...
+            </div>
         </div>
-        <input type="text" id="messageInput" placeholder="Type your message here..."
-            style="width: 100%; padding: 10px; margin-bottom: 10px;">
-        <button id="sendMessageButton" style="width: 100%; padding: 10px;">Send Message</button>
-        <div class="controls">
-            <button id="prevDayButton">Previous Day</button>
-            <button id="nextDayButton">Next Day</button>
-            <button id="prevTimeButton">Previous Time</button>
-            <button id="nextTimeButton">Next Time</button>
+        
+        <div class="chat-input-container">
+            <div class="chat-input">
+                <input type="text" id="messageInput" placeholder="Type your message here...">
+                <button id="sendMessageButton">Send</button>
+            </div>
+            
+            <div class="time-controls">
+                <button class="control-button" id="prevDayButton">← Previous Day</button>
+                <button class="control-button" id="prevTimeButton">← Previous Time</button>
+                <button class="control-button" id="nextTimeButton">Next Time →</button>
+                <button class="control-button" id="nextDayButton">Next Day →</button>
+            </div>
         </div>
     </div>
 
     <script>
-        function loadCharacter() {
+        // Global variable to store the character name
+        let currentCharacter = "";
+        let currentDay = 1;
+        let currentTimeOfDay = "morning";
+
+        // Load character information when the page loads
+        async function loadCharacter() {
             const urlParams = new URLSearchParams(window.location.search);
-            const characterName = urlParams.get("character") || "Unknown Character";
-
-            const character = {
-                name: characterName,
-                image: "image/character.jpg" // Replace with actual image URL
-            };
-
-            document.getElementById('characterName').textContent = character.name;
-            document.getElementById('characterImage').src = character.image;
+            currentCharacter = urlParams.get("character") || "Lyra"; // Default to Lyra if no character specified
+            
+            try {
+                const response = await fetch('/characters');
+                const data = await response.json();
+                
+                // Find the character in the list
+                const character = data.characters.find(char => char.name === currentCharacter);
+                
+                if (character) {
+                    document.getElementById('characterName').textContent = character.name;
+                    document.title = `Chat with ${character.name} - RolePlay.AI`;
+                    
+                    if (character.profile) {
+                        const imgElement = document.getElementById('characterImage');
+                        // Extract just the filename from the profile path
+                        const filename = character.profile.split('/').pop().split('.')[0];
+                        imgElement.src = `image/${filename}.png`;
+                        imgElement.alt = character.name;
+                    }
+                    
+                    const introMessage = document.getElementById('introMessage');
+                    introMessage.textContent = character.intro;
+                    
+                    // Add a welcome system message
+                    const welcomeMessage = document.createElement('div');
+                    welcomeMessage.className = 'system-message';
+                    welcomeMessage.textContent = `You've started a conversation with ${character.name}. Time advances with each message.`;
+                    document.getElementById('chatHistory').appendChild(welcomeMessage);
+                } else {
+                    document.getElementById('introMessage').textContent = 
+                        `Character '${currentCharacter}' not found. Please return to the home page.`;
+                    
+                    const errorMessage = document.createElement('div');
+                    errorMessage.className = 'system-message';
+                    errorMessage.textContent = 'This character does not exist in our database. Please go back and select another character.';
+                    document.getElementById('chatHistory').appendChild(errorMessage);
+                }
+            } catch (error) {
+                console.error('Error loading character:', error);
+                document.getElementById('introMessage').textContent = 
+                    'Failed to load character information. Please make sure the server is running.';
+                
+                const errorMessage = document.createElement('div');
+                errorMessage.className = 'system-message';
+                errorMessage.textContent = 'Could not connect to the server. Please check your connection and try again.';
+                document.getElementById('chatHistory').appendChild(errorMessage);
+            }
         }
 
+        // Send a message to the character
         async function sendMessage() {
             const messageInput = document.getElementById('messageInput');
             const chatHistory = document.getElementById('chatHistory');
             const message = messageInput.value.trim();
 
             if (message) {
+                // Show loading indicator
+                messageInput.disabled = true;
+                document.getElementById('sendMessageButton').disabled = true;
+                
+                // Create and display user message
                 const userMessage = document.createElement('div');
-                userMessage.className = 'chat-message';
-                userMessage.textContent = `You: ${message}`;
+                userMessage.className = 'chat-message user-message';
+                userMessage.textContent = message;
                 chatHistory.appendChild(userMessage);
+                
+                // Clear input field and scroll to bottom
+                messageInput.value = '';
+                chatHistory.scrollTop = chatHistory.scrollHeight;
 
                 try {
-                    const response = await fetch('http://127.0.0.1:5000/chat', {
+                    // Send message to API
+                    const response = await fetch('/chat', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({ message: message, character: document.getElementById('characterName').textContent })
+                        body: JSON.stringify({ 
+                            message: message, 
+                            character: currentCharacter 
+                        })
                     });
 
                     const data = await response.json();
+                    
+                    // Create and display character response
                     const characterResponse = document.createElement('div');
-                    characterResponse.className = 'chat-message';
+                    characterResponse.className = 'chat-message character-message';
 
                     if (response.ok) {
-                        characterResponse.textContent = `Character: ${data.response}`;
+                        characterResponse.textContent = data.response;
+                        
+                        // Update time display
+                        currentDay = data.day;
+                        currentTimeOfDay = data.time_of_day;
+                        updateTimeDisplay();
                     } else {
                         characterResponse.textContent = `Error: ${data.error || 'Unknown error'}`;
                     }
 
                     chatHistory.appendChild(characterResponse);
                 } catch (error) {
+                    console.error('Error sending message:', error);
                     const errorMessage = document.createElement('div');
-                    errorMessage.className = 'chat-message';
-                    errorMessage.textContent = `Error: Failed to connect to the server.`;
+                    errorMessage.className = 'system-message';
+                    errorMessage.textContent = `Error: Failed to connect to the server. Please check your connection.`;
                     chatHistory.appendChild(errorMessage);
+                } finally {
+                    // Re-enable input
+                    messageInput.disabled = false;
+                    document.getElementById('sendMessageButton').disabled = false;
+                    messageInput.focus();
+                    
+                    // Scroll to bottom of chat history
+                    chatHistory.scrollTop = chatHistory.scrollHeight;
                 }
-
-                messageInput.value = '';
-                chatHistory.scrollTop = chatHistory.scrollHeight;
             }
         }
 
-        // Event listeners for buttons
-        document.getElementById('sendMessageButton').addEventListener('click', sendMessage);
-        document.getElementById('prevDayButton').addEventListener('click', () => alert('Previous Day'));
-        document.getElementById('nextDayButton').addEventListener('click', () => alert('Next Day'));
-        document.getElementById('prevTimeButton').addEventListener('click', () => alert('Previous Time'));
-        document.getElementById('nextTimeButton').addEventListener('click', () => alert('Next Time'));
+        // Update the time display
+        function updateTimeDisplay() {
+            const timeDisplay = document.getElementById('timeDisplay');
+            const formattedTimeOfDay = currentTimeOfDay.replace('_', ' ')
+                .split(' ')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+            
+            timeDisplay.textContent = `Day ${currentDay}, ${formattedTimeOfDay}`;
+        }
 
-        // Load character on page load
-        window.onload = loadCharacter;
+        // Change the time of day or day
+        async function changeTime(action) {
+            try {
+                const response = await fetch('/character/time', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        character: currentCharacter, 
+                        action: action 
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    currentDay = data.day;
+                    currentTimeOfDay = data.time_of_day;
+                    updateTimeDisplay();
+                    
+                    // Add a system message about the time change
+                    const timeChangeMessage = document.createElement('div');
+                    timeChangeMessage.className = 'system-message';
+                    
+                    const formattedTimeOfDay = currentTimeOfDay.replace('_', ' ')
+                        .split(' ')
+                        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                        .join(' ');
+                    
+                    timeChangeMessage.textContent = `Time changed to Day ${currentDay}, ${formattedTimeOfDay}`;
+                    document.getElementById('chatHistory').appendChild(timeChangeMessage);
+                    
+                    // Scroll to bottom of chat history
+                    document.getElementById('chatHistory').scrollTop = document.getElementById('chatHistory').scrollHeight;
+                } else {
+                    console.error('Error changing time:', data.error);
+                }
+            } catch (error) {
+                console.error('Error changing time:', error);
+                
+                const errorMessage = document.createElement('div');
+                errorMessage.className = 'system-message';
+                errorMessage.textContent = 'Error changing time. Please try again.';
+                document.getElementById('chatHistory').appendChild(errorMessage);
+            }
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            // Load character information
+            loadCharacter();
+            
+            // Set up event listeners for buttons
+            document.getElementById('sendMessageButton').addEventListener('click', sendMessage);
+            document.getElementById('messageInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+            
+            // Time control buttons
+            document.getElementById('prevDayButton').addEventListener('click', () => changeTime('prev_day'));
+            document.getElementById('nextDayButton').addEventListener('click', () => changeTime('next_day'));
+            document.getElementById('prevTimeButton').addEventListener('click', () => changeTime('prev_time'));
+            document.getElementById('nextTimeButton').addEventListener('click', () => changeTime('next_time'));
+        });
     </script>
 </body>
 

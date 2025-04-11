@@ -12,7 +12,8 @@ class Character:
         self.name = name
         self.intro = intro
         self.background = background
-        self.profile = f"page\image\{profile}.png"
+        # Fix path with forward slashes instead of backslashes for web compatibility
+        self.profile = f"page/image/{profile}.png"
         self.shortTermMemory = []
         self.model = "dolphin3"
         self.current_day = 1
@@ -55,7 +56,15 @@ class Character:
         messages = [item["message"] for item in self.shortTermMemory]
         context = [{"role": "system", "content": "Summarize the following conversation into a long-term memory."}] + messages
 
-        response = ollama.chat(model=self.model, messages=context)
+        # Add token limit to Ollama call (max 150 tokens for summaries)
+        response = ollama.chat(
+            model=self.model, 
+            messages=context,
+            options={
+                "num_predict": 150,  # Limit token generation to 150 tokens
+                "temperature": 0.7   # Keep a moderate temperature for summaries
+            }
+        )
         summary = response.get("message", {}).get("content", None)
 
         if summary:
@@ -90,7 +99,19 @@ class Character:
     def talk(self, user_message, time_since_last="unknown"):
         self.remember_message({"role": "user", "content": f"{self.user_name}: {user_message}"}, time_since_last)
         context = self.build_context(user_message)
-        response = ollama.chat(model=self.model, messages=context)
+        
+        # Add token limit and response parameters
+        response = ollama.chat(
+            model=self.model, 
+            messages=context,
+            options={
+                "num_predict": 250,  # Limit token generation to 250 tokens for character responses
+                "temperature": 0.8,  # Slightly higher temperature for more creative character responses
+                "top_p": 0.9,        # Nucleus sampling for more natural responses
+                "top_k": 40          # Limit vocabulary diversity while keeping responses interesting
+            }
+        )
+        
         reply = response.get("message", {}).get("content", "No response")
         self.remember_message({"role": "assistant", "content": reply}, "0s")
         return reply

@@ -4,30 +4,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RolePlay.AI</title>
+    <title>RolePlay.AI - AI Character Interactions</title>
     <link rel="stylesheet" href="style/home.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
 <body>
     <header>
-        <h1>RolePlay.AI</h1>
-        <nav>
-            <ul>
-                <li><a href="index.html">Home</a></li>
-                <li><a href="page/about.html">About</a></li>
-            </ul>
-        </nav>
-    <div class="container">
-        <h1>Welcome to RolePlay.AI</h1>
-        <p>Interact with your favorite characters!</p>
+        <div class="header-container">
+            <h1>RolePlay<span class="highlight">.AI</span></h1>
+            <nav>
+                <ul>
+                    <li><a href="index.html" class="active">Home</a></li>
+                    <li><a href="page/about.html">About</a></li>
+                    <li><a href="https://github.com/RamblerGoodness/TalkBot" target="_blank">Github</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    
+    <div class="hero">
+        <div class="hero-content">
+            <h1>Interactive AI Characters with <span class="highlight">Memory</span></h1>
+            <p>Experience conversations with AI characters that remember your interactions, react to the time of day, and develop their relationship with you.</p>
+        </div>
     </div>
-    <div class="character-list">
-        <h2>Available Characters</h2>
-        <ul id="character-list">
-            <!-- Character list will be populated here -->
-        </ul>
+    
+    <div class="container">
+        <div class="character-section">
+            <h2>Choose Your Character</h2>
+            <p class="section-description">Select a character below to begin your conversation</p>
+            
+            <div class="character-list">
+                <ul id="character-list">
+                    <!-- Character list will be populated dynamically -->
+                    <li class="loading">
+                        <div class="loading-spinner"></div>
+                        <p>Loading characters...</p>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="features-section">
+            <h2>Features</h2>
+            <div class="feature-cards">
+                <div class="feature-card">
+                    <div class="feature-icon">🧠</div>
+                    <h3>Long-term Memory</h3>
+                    <p>Characters remember your past conversations and build context over time.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🕒</div>
+                    <h3>Dynamic Time System</h3>
+                    <p>Time progresses with each conversation, affecting character behavior and responses.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💬</div>
+                    <h3>Natural Conversations</h3>
+                    <p>Advanced AI models provide engaging and contextually relevant responses.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <div class="footer-container">
+            <p>&copy; 2025 RolePlay.AI - AI Character Interactions</p>
+        </div>
+    </footer>
 
     <script src="script/home.js"></script>
 </body>
-
-    </html>
+</html>

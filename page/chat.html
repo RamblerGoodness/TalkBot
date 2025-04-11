@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RolePlay AI Chat</title>
+    <link rel="stylesheet" href="style\home.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="character">
+            <img id="characterImage" src="placeholder.jpg" alt="Character">
+            <h2 id="characterName">Character Name</h2>
+        </div>
+        <div class="chat-history" id="chatHistory">
+            <!-- Chat messages will appear here -->
+        </div>
+        <input type="text" id="messageInput" placeholder="Type your message here..."
+            style="width: 100%; padding: 10px; margin-bottom: 10px;">
+        <button id="sendMessageButton" style="width: 100%; padding: 10px;">Send Message</button>
+        <div class="controls">
+            <button id="prevDayButton">Previous Day</button>
+            <button id="nextDayButton">Next Day</button>
+            <button id="prevTimeButton">Previous Time</button>
+            <button id="nextTimeButton">Next Time</button>
+        </div>
+    </div>
+
+    <script>
+        function loadCharacter() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const characterName = urlParams.get("character") || "Unknown Character";
+
+            const character = {
+                name: characterName,
+                image: "image/character.jpg" // Replace with actual image URL
+            };
+
+            document.getElementById('characterName').textContent = character.name;
+            document.getElementById('characterImage').src = character.image;
+        }
+
+        async function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const chatHistory = document.getElementById('chatHistory');
+            const message = messageInput.value.trim();
+
+            if (message) {
+                const userMessage = document.createElement('div');
+                userMessage.className = 'chat-message';
+                userMessage.textContent = `You: ${message}`;
+                chatHistory.appendChild(userMessage);
+
+                try {
+                    const response = await fetch('http://127.0.0.1:5000/chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ message: message, character: document.getElementById('characterName').textContent })
+                    });
+
+                    const data = await response.json();
+                    const characterResponse = document.createElement('div');
+                    characterResponse.className = 'chat-message';
+
+                    if (response.ok) {
+                        characterResponse.textContent = `Character: ${data.response}`;
+                    } else {
+                        characterResponse.textContent = `Error: ${data.error || 'Unknown error'}`;
+                    }
+
+                    chatHistory.appendChild(characterResponse);
+                } catch (error) {
+                    const errorMessage = document.createElement('div');
+                    errorMessage.className = 'chat-message';
+                    errorMessage.textContent = `Error: Failed to connect to the server.`;
+                    chatHistory.appendChild(errorMessage);
+                }
+
+                messageInput.value = '';
+                chatHistory.scrollTop = chatHistory.scrollHeight;
+            }
+        }
+
+        // Event listeners for buttons
+        document.getElementById('sendMessageButton').addEventListener('click', sendMessage);
+        document.getElementById('prevDayButton').addEventListener('click', () => alert('Previous Day'));
+        document.getElementById('nextDayButton').addEventListener('click', () => alert('Next Day'));
+        document.getElementById('prevTimeButton').addEventListener('click', () => alert('Previous Time'));
+        document.getElementById('nextTimeButton').addEventListener('click', () => alert('Next Time'));
+
+        // Load character on page load
+        window.onload = loadCharacter;
+    </script>
+</body>
+
+</html>

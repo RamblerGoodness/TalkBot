@@ -57,11 +57,39 @@
                 <button id="sendMessageButton">Send</button>
             </div>
             
+            <div class="time-settings" style="display: flex; justify-content: space-between; margin: 0.5rem 0;">
+                <div class="time-messages-settings">
+                    <label for="timeMessagesInput">Messages per time change:</label>
+                    <input type="number" id="timeMessagesInput" min="1" max="10" value="1" style="width: 3rem; margin: 0 0.5rem;">
+                    <button id="saveTimeSettings" class="button" style="padding: 0.3rem 0.7rem;">Save</button>
+                    <span id="timeSettingsStatus" style="margin-left: 0.5rem; font-size: 0.9em; color: #4caf50;"></span>
+                </div>
+                <div class="time-commands-help">
+                    <button id="showTimeCommands" class="button" style="padding: 0.3rem 0.7rem;">Show Time Commands</button>
+                </div>
+            </div>
+            
             <div class="time-controls">
                 <button class="control-button" id="prevDayButton">← Previous Day</button>
                 <button class="control-button" id="prevTimeButton">← Previous Time</button>
                 <button class="control-button" id="nextTimeButton">Next Time →</button>
                 <button class="control-button" id="nextDayButton">Next Day →</button>
+            </div>
+        </div>
+
+        <div id="timeCommandsModal" style="display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.7);">
+            <div style="background-color: #1a1a1a; margin: 15% auto; padding: 1.5rem; border: 1px solid #444; width: 80%; max-width: 600px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);">
+                <h3 style="margin-top: 0;">Time Control Commands</h3>
+                <p>You can control time directly with these commands:</p>
+                <ul style="list-style-type: none; padding-left: 1rem;">
+                    <li><code>/time next</code> - Advance to the next time of day</li>
+                    <li><code>/time previous</code> - Go back to the previous time of day</li>
+                    <li><code>/day next</code> - Advance to the next day (morning)</li>
+                    <li><code>/day previous</code> - Go back to the previous day</li>
+                    <li><code>/set messages X</code> - Change how many messages before time advances</li>
+                </ul>
+                <p>💡 <strong>Lyra can also change time</strong> when narratively appropriate!</p>
+                <button id="closeTimeCommands" class="button" style="margin-top: 1rem;">Close</button>
             </div>
         </div>
     </div>
@@ -312,6 +340,61 @@
             document.getElementById('persona-select').onchange = function() {
                 currentPersona = this.value;
                 document.getElementById('persona-active-msg').textContent = currentPersona ? `Active: ${currentPersona}` : '';
+            };
+
+            // Time settings and modal logic
+            document.getElementById('saveTimeSettings').onclick = function() {
+                const timeMessagesInput = document.getElementById('timeMessagesInput');
+                const timeSettingsStatus = document.getElementById('timeSettingsStatus');
+                const messagesPerTimeChange = parseInt(timeMessagesInput.value, 10);
+                
+                if (messagesPerTimeChange >= 1 && messagesPerTimeChange <= 10) {
+                    // Send command to update the message count setting
+                    const chatHistory = document.getElementById('chatHistory');
+                    
+                    fetch('/chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ 
+                            message: `/set messages ${messagesPerTimeChange}`, 
+                            character: currentCharacter,
+                            persona: document.getElementById('persona-select').value,
+                            day: currentDay,
+                            time_of_day: currentTimeOfDay
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.response) {
+                            // Add system message about the change
+                            const systemMsg = document.createElement('div');
+                            systemMsg.className = 'system-message';
+                            systemMsg.textContent = data.response;
+                            chatHistory.appendChild(systemMsg);
+                            chatHistory.scrollTop = chatHistory.scrollHeight;
+                            
+                            timeSettingsStatus.textContent = 'Saved!';
+                            setTimeout(() => { timeSettingsStatus.textContent = ''; }, 3000);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error updating time settings:', error);
+                        timeSettingsStatus.textContent = 'Error saving!';
+                    });
+                } else {
+                    timeSettingsStatus.textContent = 'Invalid value (1-10)!';
+                    setTimeout(() => { timeSettingsStatus.textContent = ''; }, 3000);
+                }
+            };
+
+            document.getElementById('showTimeCommands').onclick = function() {
+                document.getElementById('timeCommandsModal').style.display = 'block';
+            };
+
+            document.getElementById('closeTimeCommands').onclick = function() {
+                document.getElementById('timeCommandsModal').style.display = 'none';
             };
         });
     </script>

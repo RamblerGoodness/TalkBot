@@ -20,7 +20,8 @@ character_pool.add_character(Character(
     profile="lyra",
     db_name="lyra_memories",
     user_name="Guest",
-    user_persona="A curious visitor to the website."
+    user_persona="A curious visitor to the website.",
+    msgs_per_time_change=1  # Default: advance time every message
 ))
 # Add more characters as needed
 
@@ -191,6 +192,40 @@ def delete_persona(name):
     del personas[name]
     save_personas()
     return '', 204
+
+@app.route('/character', methods=['POST'])
+def create_character():
+    """Create a new character"""
+    data = request.json
+    if not data or 'name' not in data or 'intro' not in data or 'background' not in data or 'profile' not in data:
+        return jsonify({"error": "Missing required fields"}), 400
+    
+    # Check if character already exists
+    if character_pool.get_character(data['name']):
+        return jsonify({"error": f"Character '{data['name']}' already exists"}), 400
+    
+    try:
+        # Create a new character
+        new_character = Character(
+            name=data['name'],
+            intro=data['intro'],
+            background=data['background'],
+            profile=data['profile'],
+            db_name=f"{data['name'].lower()}_memories",
+            user_name="Guest",
+            user_persona="A curious visitor to the website.",
+            msgs_per_time_change=1
+        )
+        
+        # Add to character pool
+        character_pool.add_character(new_character)
+        
+        # Set initial time
+        new_character.set_time(day=1, time_of_day="morning")
+        
+        return jsonify({"success": True, "name": data['name']}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)

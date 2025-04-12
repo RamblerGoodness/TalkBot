@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Character - RolePlay.AI</title>
+    <link rel="stylesheet" href="../style/home.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .character-form-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: #1e1e1e;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #e0e0e0;
+        }
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #444;
+            border-radius: 6px;
+            background-color: #2a2a2a;
+            color: #fff;
+            font-family: 'Poppins', sans-serif;
+        }
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 2rem;
+        }
+        .message {
+            margin-top: 1rem;
+            padding: 0.8rem;
+            border-radius: 6px;
+            text-align: center;
+        }
+        .success {
+            background-color: rgba(76, 175, 80, 0.2);
+            color: #4caf50;
+        }
+        .error {
+            background-color: rgba(244, 67, 54, 0.2);
+            color: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <h1>RolePlay<span class="highlight">.AI</span></h1>
+            <nav>
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="about.html">About</a></li>
+                    <li><a href="https://github.com/RamblerGoodness/TalkBot" target="_blank">Github</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1>Create New Character</h1>
+        <p class="section-description">Create a new AI character with a unique personality and background</p>
+
+        <div class="character-form-container">
+            <form id="character-form">
+                <div class="form-group">
+                    <label for="char-name">Character Name:</label>
+                    <input type="text" id="char-name" required placeholder="e.g., Elara">
+                </div>
+
+                <div class="form-group">
+                    <label for="char-intro">Introduction (how they first appear):</label>
+                    <textarea id="char-intro" required placeholder="e.g., *A mysterious figure emerges from the shadows, her eyes glowing with an otherworldly light.*"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="char-background">Background/Personality:</label>
+                    <textarea id="char-background" required placeholder="Describe the character's history, personality, and any unique traits. This will guide how the AI responds."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="char-profile">Profile Image Name:</label>
+                    <input type="text" id="char-profile" required placeholder="Image name (without extension) in page/image folder">
+                    <p style="margin-top: 0.5rem; font-size: 0.9em; color: #aaa;">Note: Upload a square PNG image to 'page/image' folder with this name</p>
+                </div>
+
+                <div id="message-container"></div>
+
+                <div class="button-group">
+                    <button type="button" class="button" style="background-color: #555;" onclick="window.location.href='../index.html'">Cancel</button>
+                    <button type="submit" class="button">Create Character</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-container">
+            <p>&copy; 2025 RolePlay.AI - AI Character Interactions</p>
+        </div>
+    </footer>
+
+    <script src="../script/create-character.js"></script>
+</body>
+</html>

@@ -284,9 +284,13 @@ class Character:
             "intro": self.intro,
             "background": self.background,
             "profile": self.profile,
-            "shortTermMemory": self.short_term_memory.entries,
+            "db_name": getattr(self.long_term_memory, "db_path", "").replace("_chroma", ""),
+            "user_name": self.user_name,
+            "user_persona": self.user_persona,
             "current_day": self.current_day,
-            "time_of_day": self.time_of_day
+            "time_of_day": self.time_of_day,
+            "msgs_per_time_change": self.msgs_per_time_change,
+            "message_count": self.message_count
         }
 
     def test_tool_calls(self):

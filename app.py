@@ -12,22 +12,25 @@ CORS(app)
 # Initialize character pool
 character_pool = CharacterPool()
 
-# Add initial characters
-character_pool.add_character(Character(
-    name="Lyra",
-    intro="*A shimmer in the air coalesces into a glowing figure. She smiles.*",
-    background="Once a guardian of ancient celestial archives, now wandering worlds in search of lost stories.",
-    profile="lyra",
-    db_name="lyra_memories",
-    user_name="Guest",
-    user_persona="A curious visitor to the website.",
-    msgs_per_time_change=1  # Default: advance time every message
-))
-# Add more characters as needed
+# Add initial Lyra character only if it doesn't already exist
+if not character_pool.get_character("Lyra"):
+    character_pool.add_character(Character(
+        name="Lyra",
+        intro="*A shimmer in the air coalesces into a glowing figure. She smiles.*",
+        background="Once a guardian of ancient celestial archives, now wandering worlds in search of lost stories.",
+        profile="lyra",
+        db_name="lyra_memories",
+        user_name="Guest",
+        user_persona="A curious visitor to the website.",
+        msgs_per_time_change=1  # Default: advance time every message
+    ))
+# Add more default characters as needed
 
 # Set initial time for all characters
 for character in character_pool.list_characters():
-    character.set_time(day=1, time_of_day="morning")
+    # Only set time if it hasn't been set (current_day will be 0 if not set)
+    if not hasattr(character, 'current_day') or character.current_day == 0:
+        character.set_time(day=1, time_of_day="morning")
 
 PERSONA_FILE = "personas.json"
 

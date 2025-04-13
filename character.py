@@ -125,6 +125,11 @@ class Character:
         
         self.remember_message({"role": "assistant", "content": processed_reply}, "0s")
         
+        # Check if it's time to update long-term memory
+        # We'll update memory when we have at least 8 messages
+        if len(self.short_term_memory.entries) >= 8:
+            self.summarize_and_store_memory()
+        
         # Auto-advance time based on message count if enabled
         if auto_advance:
             self.message_count += 1

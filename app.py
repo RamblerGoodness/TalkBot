@@ -3,6 +3,8 @@ from flask_cors import CORS
 from character import Character
 from character_pool import CharacterPool
 from persona import Persona
+from narrator import Narrator
+from narrator_manager import NarratorManager
 import os
 import json
 
@@ -31,6 +33,17 @@ for character in character_pool.list_characters():
     # Only set time if it hasn't been set (current_day will be 0 if not set)
     if not hasattr(character, 'current_day') or character.current_day == 0:
         character.set_time(day=1, time_of_day="morning")
+
+# Initialize narrator manager with the character pool
+narrator_manager = NarratorManager(character_pool)
+
+# Create a default narrator if none exists
+if not narrator_manager.list_narrators():
+    default_narrator = narrator_manager.create_narrator("default_story", "dolphin3")
+    # Add all existing characters to the default narrator
+    for character in character_pool.list_characters():
+        default_narrator.add_character(character)
+    narrator_manager.set_active_narrator("default_story")
 
 PERSONA_FILE = "personas.json"
 
@@ -83,10 +96,17 @@ def get_characters():
     """Get the list of available characters"""
     character_list = []
     for char in character_pool.list_characters():
+        # Fix character profile paths to ensure they point to the correct image location
+        profile_path = char.profile
+        # If profile is just a name without path, prepend the correct path
+        if not profile_path.startswith('/'):
+            profile_path = f"/page/image/{profile_path}.png"
+        
         character_list.append({
             "name": char.name,
             "intro": char.intro,
-            "profile": char.profile
+            "profile": profile_path,
+            "background": char.background
         })
     return jsonify({"characters": character_list})
 
@@ -229,6 +249,175 @@ def create_character():
         return jsonify({"success": True, "name": data['name']}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route('/narrators', methods=['GET'])
+def get_narrators():
+    """Get a list of all narrators"""
+    return jsonify({"narrators": narrator_manager.list_narrators()})
+
+@app.route('/narrator', methods=['POST'])
+def create_narrator():
+    """Create a new narrator"""
+    data = request.json
+    if not data or 'id' not in data:
+        return jsonify({"error": "Missing narrator ID"}), 400
+    
+    narrator_id = data['id']
+    model_name = data.get('model', 'dolphin3')
+    
+    # Check if narrator already exists
+    if narrator_manager.get_narrator(narrator_id):
+        return jsonify({"error": f"Narrator '{narrator_id}' already exists"}), 400
+    
+    try:
+        narrator = narrator_manager.create_narrator(narrator_id, model_name)
+        return jsonify({"success": True, "id": narrator_id}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/narrator/<narrator_id>', methods=['DELETE'])
+def delete_narrator(narrator_id):
+    """Delete a narrator"""
+    if not narrator_manager.get_narrator(narrator_id):
+        return jsonify({"error": f"Narrator '{narrator_id}' not found"}), 404
+    
+    narrator_manager.delete_narrator(narrator_id)
+    return jsonify({"success": True}), 200
+
+@app.route('/narrator/active', methods=['GET'])
+def get_active_narrator():
+    """Get the currently active narrator"""
+    active_narrator = narrator_manager.get_active_narrator()
+    if not active_narrator:
+        return jsonify({"error": "No active narrator set"}), 404
+    
+    # Get current characters in the active narrator's scene
+    characters_present = []
+    for char_name in active_narrator.story_state["characters_present"]:
+        character = active_narrator.characters.get(char_name)
+        if character:
+            # Fix character profile paths
+            profile_path = character.profile
+            if not profile_path.startswith('/'):
+                profile_path = f"/page/image/{profile_path}.png"
+                
+            characters_present.append({
+                "name": character.name,
+                "intro": character.intro,
+                "profile": profile_path
+            })
+    
+    return jsonify({
+        "id": narrator_manager.active_narrator_id,
+        "scene": active_narrator.story_state["scene"],
+        "day": active_narrator.story_state["day"],
+        "time_of_day": active_narrator.story_state["time_of_day"],
+        "characters_present": characters_present
+    })
+
+@app.route('/narrator/active', methods=['PUT'])
+def set_active_narrator():
+    """Set the active narrator"""
+    data = request.json
+    if not data or 'id' not in data:
+        return jsonify({"error": "Missing narrator ID"}), 400
+    
+    narrator_id = data['id']
+    if not narrator_manager.get_narrator(narrator_id):
+        return jsonify({"error": f"Narrator '{narrator_id}' not found"}), 404
+    
+    narrator_manager.set_active_narrator(narrator_id)
+    return jsonify({"success": True}), 200
+
+@app.route('/narrator/character', methods=['POST'])
+def add_character_to_narrator():
+    """Add a character to a narrator"""
+    data = request.json
+    if not data or 'narrator_id' not in data or 'character_name' not in data:
+        return jsonify({"error": "Missing narrator ID or character name"}), 400
+    
+    narrator_id = data['narrator_id']
+    character_name = data['character_name']
+    
+    if narrator_manager.add_character_to_narrator(narrator_id, character_name):
+        return jsonify({"success": True}), 200
+    else:
+        return jsonify({"error": f"Failed to add character '{character_name}' to narrator '{narrator_id}'"}), 400
+
+@app.route('/narrator/scene', methods=['POST'])
+def set_narrator_scene():
+    """Set the scene for the active narrator"""
+    data = request.json
+    if not data or 'scene' not in data:
+        return jsonify({"error": "Missing scene description"}), 400
+    
+    active_narrator = narrator_manager.get_active_narrator()
+    if not active_narrator:
+        return jsonify({"error": "No active narrator set"}), 404
+    
+    scene_description = data['scene']
+    characters_present = data.get('characters_present', active_narrator.story_state["characters_present"])
+    
+    active_narrator.set_scene(scene_description, characters_present)
+    narrator_manager.save_narrators()
+    
+    return jsonify({
+        "success": True,
+        "scene": scene_description,
+        "characters_present": characters_present
+    })
+
+@app.route('/narrator/chat', methods=['POST'])
+def narrator_chat():
+    """Process a chat message in narrator mode"""
+    data = request.json
+    if not data or 'message' not in data:
+        return jsonify({"error": "Missing message parameter"}), 400
+    
+    active_narrator = narrator_manager.get_active_narrator()
+    if not active_narrator:
+        return jsonify({"error": "No active narrator set"}), 404
+    
+    # Set persona if provided
+    persona_name = data.get('persona')
+    if persona_name and persona_name in personas:
+        persona = personas[persona_name]
+        active_narrator.set_user_persona(persona.name, persona.description)
+    
+    # Process the message
+    message = data['message']
+    result = active_narrator.process_user_message(message)
+    
+    # Save any changes to the narrator state
+    narrator_manager.save_narrators()
+    
+    return jsonify(result)
+
+@app.route('/narrator/direct', methods=['POST'])
+def direct_scene():
+    """Get narrative direction for the current scene"""
+    active_narrator = narrator_manager.get_active_narrator()
+    if not active_narrator:
+        return jsonify({"error": "No active narrator set"}), 404
+    
+    data = request.json
+    prompt = data.get('prompt') if data else None
+    
+    result = active_narrator.direct_scene(prompt)
+    return jsonify(result)
+
+@app.route('/narrator/suggest-character', methods=['POST'])
+def suggest_character():
+    """Get a suggestion for a new character based on the current story"""
+    active_narrator = narrator_manager.get_active_narrator()
+    if not active_narrator:
+        return jsonify({"error": "No active narrator set"}), 404
+    
+    data = request.json
+    prompt = data.get('prompt') if data else None
+    
+    result = active_narrator.suggest_new_character(prompt)
+    return jsonify(result)
 
 if __name__ == '__main__':
     app.run(debug=True)

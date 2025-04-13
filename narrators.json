@@ -1,0 +1,45 @@
+{
+  "active_narrator_id": "Stories from the past",
+  "narrators": {
+    "default_story": {
+      "story_state": {
+        "plot_points": [],
+        "scene": "start",
+        "characters_present": [
+          "Lyra"
+        ],
+        "themes": [],
+        "day": 1,
+        "time_of_day": "morning"
+      },
+      "last_speaking_character": null,
+      "user_name": "Guest",
+      "user_persona": "A curious visitor to the story.",
+      "model": "dolphin3",
+      "character_names": [
+        "Lyra"
+      ]
+    },
+    "Stories from the past": {
+      "story_state": {
+        "plot_points": [],
+        "scene": "We are time travelers.",
+        "characters_present": [
+          "Lyra",
+          "Ungga Bunga"
+        ],
+        "themes": [],
+        "day": 1,
+        "time_of_day": "afternoon"
+      },
+      "last_speaking_character": "Lyra",
+      "user_name": "Joseph",
+      "user_persona": "GamerBoy",
+      "model": "dolphin3",
+      "character_names": [
+        "Lyra",
+        "Ungga Bunga"
+      ]
+    }
+  }
+}
